@@ -15,6 +15,11 @@ import javax.swing.JPanel;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionAdapter;
+import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import javax.swing.border.Border;
 
 public class Map extends JApplet {
 
@@ -28,94 +33,88 @@ public class Map extends JApplet {
     private int r = 8;
     JLabel label1;
     JLabel label2;
-
+    int width_screen;
+    int heigh_screen;
     public void init() {
 
         JPanel p = new JPanel();
-
+        p.setVisible(true);
+        
+        heigh_screen = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+        width_screen = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
         label1 = new JLabel("Click several times to create a polygon. Finish by clicking on Point 0.");
         label1.setBackground(Color.CYAN);
         label1.setOpaque(true);
         label1.setVisible(true);
         label1.setPreferredSize(new Dimension(1000, 400));
         label1.setSize(new Dimension(1000, 400));
+        label1.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 2, true));
         p.setLayout(new FlowLayout());
         p.add(label1);
         Container content = getContentPane();
         content.setLayout(new BorderLayout()); // Used to center the panel
         content.add(p, BorderLayout.SOUTH);
 
-        PaintPanel paintPanel = new PaintPanel();
+        PaintPanel paintPanel = new PaintPanel(30, 30);
+        paintPanel.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 2, true));
+        paintPanel.setBounds(5, 5, 500, 500);
         content.add(paintPanel, BorderLayout.CENTER);
+        repaint();
+
+        Random rand = new Random(100);
+        ScheduledExecutorService service__ = Executors.newSingleThreadScheduledExecutor();
+        service__.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                int xx = rand.nextInt(200);
+                int yy = rand.nextInt(200);
+                paintPanel.setX_point(xx);
+                paintPanel.setY_point(yy);
+                repaint();
+            }
+        }, 0, 1000, TimeUnit.MILLISECONDS);
 
     }
 
     public class PaintPanel extends JPanel {
 
-        // set up GUI and register mouse event handler
-        public PaintPanel() {
+        private int x_point;
+        private int y_point;
+
+        public void setX_point(int x_point) {
+            this.x_point = x_point;
+        }
+
+        public void setY_point(int y_point) {
+            this.y_point = y_point;
+        }
+
+        public PaintPanel(int x, int y) {
             super();
+            x_point = x;
+            y_point = y;
             this.setBackground(Color.LIGHT_GRAY);
-
-            // handle frame mouse  event
-            addMouseListener(
-                    new MouseAdapter() // anonymous inner class
-            {
-                // define a point and repaint
-                public void mousePressed(MouseEvent event) {
-                    if (!p0Exists) {
-                        // create point0
-                        points[0] = new Point(event.getX(), event.getY());
-                        System.out.println("Point 0 created: " + points[0]);
-                        p0Exists = true;
-                        repaint();
-                    } else if (!p1Exists) {
-                        // create point1
-                        points[1] = new Point(event.getX(), event.getY());
-                        System.out.println("Point 1 created: " + points[1]);
-                        p1Exists = true;
-                        repaint();
-                    }
-
-                } // end method mousePressed
-
-            } // end anonymous inner class
-            ); // end call to addMouseMotionListener
-        } // end PaintPanel constructor
+            points[0] = new Point(x_point, y_point);
+            repaint();
+        }
 
         public void paint(Graphics g) {
             super.paint(g); // clears drawing area
-            if (p0Exists) {
-                g.drawOval(points[0].x - r / 2, points[0].y - r / 2, r, r);
-                g.drawString("Point0", points[0].x, points[0].y - 3 * r);
-                g.drawString("x=" + points[0].x + " y=" + points[0].y,
-                        points[0].x, points[0].y - r);
-                //g.drawLine(points[ 0 ].x - r/2, points[ 0 ].y - r/2, r, r);
-            }
-            if (p1Exists) {
-                g.drawOval(points[1].x - r / 2, points[1].y - r / 2, r, r);
-                g.drawString("Point1", points[1].x, points[1].y - 3 * r);
-                g.drawString("x=" + points[1].x + " y=" + points[1].y,
-                        points[1].x, points[1].y - r);
-            }
-            if (p0Exists && p1Exists) {
-                g.drawLine(points[0].x, points[0].y, points[1].x, points[1].y);
-            }
+            g.fillOval(x_point, y_point, 8, 8);
+
+            int line = 10;
+            int rowHt = 200 / line;
             
-            int rows = 20;
-            int cols = 20;
-            
-//            int rowHt = height / (rows);
-//            for (int i = 0; i < rows; i++) {
-//                g.drawLine(0, i * rowHt, width, i * rowHt);
-//            }
-//
-//            // draw the columns
-//            int rowWid = width / (cols);
-//            for (int i = 0; i < cols; i++) {
-//                g.drawLine(i * rowWid, 0, i * rowWid, height);
-//            }
-        } 
+            for (int i = 0; i < line; i++) {
+                g.drawLine(0, i * rowHt, 200, i * rowHt);
+            }
+
+            int rowWid = 200 / line;
+            for (int i = 0; i < line; i++) {
+                g.drawLine(i * rowWid, 0, i * rowWid, 200);
+            }
+
+        }
     }
 
 }
