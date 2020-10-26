@@ -39,6 +39,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import javax.swing.JTextArea;
+import java.lang.Math;
 
 /**
  *
@@ -70,9 +71,26 @@ public class MainJFrame extends javax.swing.JFrame {
     private JButton jbtConnect;
     private JButton jbtCheckRF;
     private JButton jbtExecute;
-    private JTextArea  jtaInFo;
+    private JTextArea jtaInFo;
 
+    private int X_1, X2;
+    private int Y_1, Y2;
+
+    private ScheduledExecutorService executorServiceCheckModule;
+    private ScheduledExecutorService executorServiceExecution;
+    private String rxData = "";
+    private static SerialPort comPortMain;
+    private boolean isOpenPort = false;
+
+    
+        // Configuation Fram
+    private JLabel jLabelPort;
+    private JComboBox<String> jComboBoxPort;
+    private int iIndexPort = 0;
+    
+    
     void setGuiTemp() {
+
         jLabelTitle = new JLabel("Chương Trình Giám Sát Đuối Nước");
         jLabelTitle.setBounds(heigh_screen_map + 250, 40, 700, 50);
         //jLabelTitle.setBorder(new javax.swing.border.LineBorder(Color.RED, 1, true));
@@ -103,7 +121,7 @@ public class MainJFrame extends javax.swing.JFrame {
         jLabelPort.setHorizontalAlignment(SwingConstants.LEFT);
 
         jComboBoxPort = new JComboBox<String>();
-        jComboBoxPort.setBounds(X_jLabelPort + 120, Y_jLabelPort + 10, 100, 30);;
+        jComboBoxPort.setBounds(X_jLabelPort + 120, Y_jLabelPort + 10, 150, 30);;
         jComboBoxPort.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N       
 
         for (SerialPort com : SerialPort.getCommPorts()) {
@@ -112,43 +130,42 @@ public class MainJFrame extends javax.swing.JFrame {
         }
 
         JLabel jLabelPort1 = new JLabel("Connect");
-        jLabelPort1.setBounds(X_jLabelPort, Y_jLabelPort + 50, 100, 50);
+        jLabelPort1.setBounds(X_jLabelPort, Y_jLabelPort + 50, 150, 50);
         jLabelPort1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabelPort1.setHorizontalAlignment(SwingConstants.LEFT);
 
         jbtConnect = new JButton("Open");
-        jbtConnect.setBounds(X_jLabelPort + 120, Y_jLabelPort + 60, 100, 30);
+        jbtConnect.setBounds(X_jLabelPort + 120, Y_jLabelPort + 60, 150, 30);
         jbtConnect.setFont(new Font("Times New Roman", Font.BOLD, 18));
 
         JLabel jLabelPort2 = new JLabel("Check RF");
-        jLabelPort2.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50, 100, 50);
+        jLabelPort2.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50, 150, 50);
         jLabelPort2.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabelPort2.setHorizontalAlignment(SwingConstants.LEFT);
 
         jbtCheckRF = new JButton("Test");
-        jbtCheckRF.setBounds(X_jLabelPort + 120, Y_jLabelPort + 60 + 50, 100, 30);
+        jbtCheckRF.setBounds(X_jLabelPort + 120, Y_jLabelPort + 60 + 50, 150, 30);
         jbtCheckRF.setFont(new Font("Times New Roman", Font.BOLD, 18));
 
-                       
         JLabel jLabelPort3 = new JLabel("Execute");
-        jLabelPort3.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50, 100, 50);
+        jLabelPort3.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50, 150, 50);
         jLabelPort3.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabelPort3.setHorizontalAlignment(SwingConstants.LEFT);
 
         jbtExecute = new JButton("Run");
-        jbtExecute.setBounds(X_jLabelPort + 120, Y_jLabelPort + 60 + 50 + 50, 100, 30);
+        jbtExecute.setBounds(X_jLabelPort + 120, Y_jLabelPort + 60 + 50 + 50, 150, 30);
         jbtExecute.setFont(new Font("Times New Roman", Font.BOLD, 18));
-        
+
         JLabel jLabelPort4 = new JLabel("Information");
-        jLabelPort4.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50, 130, 50);
+        jLabelPort4.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50, 150, 50);
         jLabelPort4.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabelPort4.setHorizontalAlignment(SwingConstants.LEFT);
-        
+
         jtaInFo = new JTextArea("The system have not started !!!");
         jtaInFo.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 40, width_screen - width_screen_map - 150, 300);
         jtaInFo.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
         jtaInFo.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
-        
+
         add(jLabel_A);
         add(jLabel_B);
         add(jLabel_C);
@@ -167,13 +184,27 @@ public class MainJFrame extends javax.swing.JFrame {
 
         onClickConnect();
         onClickCheck();
+        onClickExecution();
     }
 
     private void onClickConnect() {
         jbtConnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-               
+                if (isOpenPort == false) {
+                    comPortMain = SerialPort.getCommPort(jComboBoxPort.getItemAt(iIndexPort));
+                    isOpenPort = comPortMain.openPort();
+                    //comPortMain.setComPortTimeouts(SerialPort.LISTENING_EVENT_DATA_RECEIVED, 200, 100);
+                    if (isOpenPort) {
+                        jbtConnect.setText("Disconnect");
+                    } else {
+                        JOptionPane.showMessageDialog(MainJFrame.this, "Không Thể Kết Nối Vui Lòng Kiểm Tra Lại !!!", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    comPortMain.closePort();
+                    jbtConnect.setText("Connect");
+                    isOpenPort = false;
+                }
             }
         });
     }
@@ -182,7 +213,25 @@ public class MainJFrame extends javax.swing.JFrame {
         jbtCheckRF.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (isOpenPort) {
+                    SingleThreadReceiveDataCheckModule();
+                    comPortMain.writeBytes("TEST".getBytes(), 4);
+                } else {
+                    JOptionPane.showMessageDialog(MainJFrame.this, "Vui Long Ket Noi Truoc Khi Kiem Tra Module !!!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+    }
 
+    private void onClickExecution() {
+        jbtCheckRF.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (isOpenPort) {
+                    SingleThreadReceiveDataExecution();
+                } else {
+                    JOptionPane.showMessageDialog(MainJFrame.this, "Vui Long Ket Noi Truoc Khi Kiem Tra Module !!!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
     }
@@ -193,6 +242,7 @@ public class MainJFrame extends javax.swing.JFrame {
         width_screen = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
         System.out.println("width_screen: " + width_screen);
         System.out.println("heigh_screen: " + heigh_screen);
+        distanceBLE(-24.56);
 
         initComponents();
         getContentPane().setBackground(Color.WHITE);
@@ -208,6 +258,11 @@ public class MainJFrame extends javax.swing.JFrame {
         paintPanel.setBorder(new javax.swing.border.LineBorder(Color.RED, 2, true));
         add(paintPanel);
 
+        X_1 = width_screen_map;
+        Y_1 = heigh_screen_map;
+        System.out.println("X_1: " + X_1);
+        System.out.println("Y_1: " + Y_1);
+
         Random rand = new Random(100);
         ScheduledExecutorService service__ = Executors.newSingleThreadScheduledExecutor();
         service__.scheduleAtFixedRate(new Runnable() {
@@ -218,11 +273,41 @@ public class MainJFrame extends javax.swing.JFrame {
 
                 x = xx;
                 y = yy;
-                paintPanel.setX_point(x);
-                paintPanel.setY_point(y);
+
+                double x1 = 32.5 * 2.0 - 0.5;
+                double y1 = 10 * 2.0 - 0.5;
+
+                double x_10 = X_1 / 100.0;
+                double y_10 = Y_1 / 100.0;
+
+                System.out.println("x_10: " + x_10);
+                System.out.println("y_10: " + y_10);
+
+                double x = x1 > 0 ? (x1 * x_10 - 10.0) : 10; // met
+                double y = y1 > 0 ? (Y_1 - y1 * y_10 - 10.0) : -10; // met
+
+                System.out.println("_______________________x_: " + x1 * x_10 + " --------------- " + x);
+                System.out.println("_______________________y_: " + y1 * y_10 + " --------------- " + y);
+
+                paintPanel.setX_point((int) x);
+                paintPanel.setY_point((int) y);
                 repaint();
+
             }
         }, 0, 1000, TimeUnit.MILLISECONDS);
+        // service__.shutdown();
+    }
+
+    private double distanceBLE(double RSSI) {
+        double d = 0;
+        double A = -12;
+        double n = 2.0755;
+        double rs_a = RSSI - A;
+        double _10n = -10.0 * n;
+        double soMu = rs_a / _10n;
+        d = Math.round(Math.pow(10, soMu) * 100.0) / 100.0;
+        System.out.println("Distance: " + d);
+        return d;
     }
 
     /**
@@ -320,9 +405,9 @@ public class MainJFrame extends javax.swing.JFrame {
 
         public void paint(Graphics g) {
             super.paint(g); // clears drawing area
-            g.fillOval(x_point, y_point, 10, 10);
-            g.fillOval(x_point + 20, y_point, 10, 10);
-            g.fillOval(x_point + 40, y_point, 10, 10);
+            g.fillOval(x_point, y_point, 15, 15);
+//            g.fillOval(x_point + 20, y_point, 10, 10);
+//            g.fillOval(x_point + 40, y_point, 10, 10);
 
             g.setColor(Color.red);
             g.setFont(new Font("Courier", Font.BOLD, 13));
@@ -333,133 +418,118 @@ public class MainJFrame extends javax.swing.JFrame {
             for (int i = 0; i < line; i++) {
                 g.drawLine(i * rowHt, 0, i * rowHt, heigh_screen_map);
                 if (i == 0) {
-                    g.drawString(String.valueOf(i), i * rowHt + 3, heigh_screen_map - 5);
+                    g.drawString(String.valueOf(i * 5), i * rowHt + 3, heigh_screen_map - 5);
                 } else if (i < 10) {
-                    g.drawString(String.valueOf(i), i * rowHt - 10, heigh_screen_map - 5);
+                    g.drawString(String.valueOf(i * 5), i * rowHt - 10, heigh_screen_map - 5);
                 } else if (i >= 10) {
-                    g.drawString(String.valueOf(i), i * rowHt - 20, heigh_screen_map - 5);
+                    g.drawString(String.valueOf(i * 5), i * rowHt - 20, heigh_screen_map - 5);
                 }
             }
-            g.drawString(String.valueOf(line), line * rowHt - 20, heigh_screen_map - 5);
+            g.drawString(String.valueOf(line * 5), line * rowHt - 20, heigh_screen_map - 5);
 //
             int rowWid = heigh_screen_map / line;
             for (int i = 0; i < line; i++) {
                 g.drawLine(0, i * rowWid, width_screen_map, i * rowWid);
                 if (i != 0) {
-                    g.drawString(String.valueOf(line - i), 3, i * rowWid + 12);
+                    g.drawString(String.valueOf((line - i) * 5), 3, i * rowWid + 12);
                 }
             }
-            g.drawString(String.valueOf(line), 3, 12);
+            g.drawString(String.valueOf(50), 3, 12);
         }
     }
 
-    // Configuation Fram
-    private JLabel jLabelPort;
-    private JComboBox<String> jComboBoxPort;
-    private JLabel jLabelName;
-    private JTextField jTextFieldPathFile;
-    private JButton jButtonNameFile;
+    private void SingleThreadReceiveDataCheckModule() {
+        ReceeiveData();
+        executorServiceCheckModule = Executors.newSingleThreadScheduledExecutor();
+        executorServiceCheckModule.scheduleAtFixedRate(new Runnable() {
+            private int iCheckModule = 0;
 
-    private JButton jButtonOK;
-    private JButton jButtonCancel;
-    private JButton jButtonApply;
-
-    private int iIndexPort = 0;
-
-    private void createFramSetup() {
-        boolean isStatusApply = false;
-        JFrame f = new JFrame("Configuration");
-        f.getContentPane().setBackground(Color.green);
-        f.setSize(750, 250);
-        f.setLocation(width_screen_map + 100, 300);
-        //Border border = BorderFactory.createLineBorder(Color.BLACK, 1);
-
-        jLabelPort = new JLabel("Port Name");
-        jLabelPort.setLocation(5, 5);
-        jLabelPort.setSize(100, 30);
-        jLabelPort.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
-
-        jComboBoxPort = new JComboBox<String>();
-        jComboBoxPort.setLocation(105, 5);
-        jComboBoxPort.setSize(90, 30);
-        jComboBoxPort.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-
-        for (SerialPort com : SerialPort.getCommPorts()) {
-            String s = com.getSystemPortName();
-            jComboBoxPort.addItem(s);
-        }
-
-        jComboBoxPort.setSelectedItem(jComboBoxPort.getItemAt(iIndexPort));
-
-        jLabelName = new JLabel("Path File");
-        jLabelName.setLocation(5, 40);
-        jLabelName.setSize(100, 30);
-        jLabelName.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
-
-        jTextFieldPathFile = new JTextField("");
-        jTextFieldPathFile.setLocation(105, 40);
-        jTextFieldPathFile.setSize(550, 30);
-        jTextFieldPathFile.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        jTextFieldPathFile.setEditable(false);
-
-        jButtonNameFile = new JButton("...");
-        jButtonNameFile.setLocation(660, 40);
-        jButtonNameFile.setSize(50, 30);
-        jButtonNameFile.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
-        jButtonNameFile.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser c = new JFileChooser();
-
-                c.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-                c.showOpenDialog(null);
-                File file = c.getSelectedFile();
-                String fullPath = file.getAbsolutePath();
-                System.out.println("sPath: " + fullPath);
-            }
-        });
-
-        // Button OK
-        jButtonOK = new JButton("OK");
-        jButtonOK.setLocation(250 - 50, 140);
-        jButtonOK.setSize(100, 35);
-        jButtonOK.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
-        jButtonOK.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!isStatusApply) {
-                    System.out.println("jButtonOK is called");
-                    iIndexPort = jComboBoxPort.getSelectedIndex();
-                    String comPortMain = SerialPort.getCommPort(jComboBoxPort.getItemAt(iIndexPort)).toString();
-                    System.out.println("comPortMain: " + comPortMain);
+            public void run() {
+                System.out.println("---------------------------------- " + rxData);
+                if (iCheckModule == 0) {
+                    jtaInFo.setText(jtaInFo.getText() + "\n"
+                            + "---- The Modules Are Checking ----");
                 }
-                f.dispose();
+                if (!rxData.isEmpty()) {
+                    jtaInFo.setText(jtaInFo.getText() + "\n" + rxData);
+                }
+                rxData = "";
+                iCheckModule++;
+                if (iCheckModule > 8) {
+                    jtaInFo.setText(jtaInFo.getText() + "\n"
+                            + "---- Finished ----");
+                    iCheckModule = 0;
+                    executorServiceCheckModule.shutdown();
+                }
             }
-        });
-
-        // Button Cancel
-        jButtonCancel = new JButton("Cancel");
-        jButtonCancel.setLocation(750 / 2 + 75, 140);
-        jButtonCancel.setSize(100, 35);
-        jButtonCancel.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
-        jButtonCancel.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("jButtonCancel is called");
-                f.dispose();
-
-            }
-        });
-
-        f.add(jLabelPort);
-        f.add(jComboBoxPort);
-        f.add(jLabelName);
-        f.add(jTextFieldPathFile);
-        f.add(jButtonNameFile);
-        f.add(jButtonOK);
-        f.add(jButtonCancel);
-        f.setLayout(null);
-        f.setVisible(true);
+        }, 0, 300, TimeUnit.MILLISECONDS);
     }
 
+    private void SingleThreadReceiveDataExecution() {
+        ReceeiveData();
+        executorServiceExecution = Executors.newSingleThreadScheduledExecutor();
+        executorServiceExecution.scheduleAtFixedRate(new Runnable() {
+            private int sttModule = 1;
+            int rssi_A = 0;
+            int rssi_B = 0;
+            int rssi_C = 0;
+            int rssi_D = 0;
+
+            @Override
+            public void run() {
+                System.out.println("---------------------------------- " + rxData);
+                if (!rxData.isEmpty() && sttModule == 0) {
+                    try {
+                        rssi_A = Integer.parseInt("01");
+                        rssi_B = Integer.parseInt("01");
+                        rssi_C = Integer.parseInt("01");
+                        rssi_D = Integer.parseInt("01");
+                    }
+                    catch(Exception e){
+                        rxData = "";
+                    }
+                    rxData = "";
+                }
+
+                if (isOpenPort) {
+                    switch (sttModule) {
+                        case 0:
+                            comPortMain.writeBytes("MA".getBytes(), 3);
+                            sttModule = 1;
+                            break;
+                        case 1:
+                            comPortMain.writeBytes("MB".getBytes(), 3);
+                            sttModule = 2;
+                            break;
+                        case 2:
+                            comPortMain.writeBytes("MC".getBytes(), 3);
+                            sttModule = 3;
+                            break;
+                        case 3:
+                            comPortMain.writeBytes("MD".getBytes(), 3);
+                            sttModule = 0;
+                            break;
+                    }
+                }
+            }
+        }, 0, (long) (1000), TimeUnit.MILLISECONDS);
+    }
+
+    private void ReceeiveData() {
+        comPortMain.addDataListener(new SerialPortDataListener() {
+            @Override
+            public int getListeningEvents() {
+                return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
+            }
+
+            @Override
+            public void serialEvent(SerialPortEvent event) {
+                byte[] newData = event.getReceivedData();
+                for (int i = 0; i < newData.length; ++i) {
+                    rxData += (char) newData[i];
+                }
+            }
+        });
+    }
 }

@@ -15,60 +15,25 @@ import java.awt.Point;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-class GridsCanvas extends JPanel {
-
-    int width, height;
-
-    int rows;
-
-    int cols;
-
-    GridsCanvas(int w, int h, int r, int c) {
-        setSize(width = w, height = h);
-        rows = r;
-        cols = c;
-    }
-
-    @Override
-    public void paint(Graphics g) {
-        int i;
-        width = getSize().width;
-        height = getSize().height;
-
-        // draw the rows
-        int rowHt = height / (rows);
-        for (i = 0; i < rows; i++) {
-            g.drawLine(0, i * rowHt, width, i * rowHt);
-        }
-
-        // draw the columns
-        int rowWid = width / (cols);
-        for (i = 0; i < cols; i++) {
-            g.drawLine(i * rowWid, 0, i * rowWid, height);
-        }
-    }
-}
-
-public class Map1 extends JFrame {
-
-    private Point points[] = new Point[2];
-
-    private boolean p0Exists = false;
-    private boolean p1Exists = false;
-    private int r = 8;
-
-    public Map1() {
-
-        GridsCanvas xyz = new GridsCanvas(200, 200, 10, 10);
-        add(xyz);
-
-        pack();
-        points[0] = new Point(50, 50);
-        repaint();
-    }
+class GridsCanvas {
 
     public static void main(String[] a) {
-        new Map1().setVisible(true);
+        distanceBLE1(-41.16 );
+        distanceBLE1(-41.16 );
+        distanceBLE1(-41.16 );
+        distanceBLE1(-41.16 );
+    }
+
+    private static double distanceBLE1(double RSSI) {
+        double d = 0;
+        int A = -12;
+        double n = 2.0755;
+        double rs_a = RSSI - A;
+        double _10n = -10.0 * n;
+        double soMu = rs_a / _10n;
+        d = Math.round(Math.pow(10, soMu)*100.0)/100.0;
+        System.out.println("Distance: " + d);
+        return d;
     }
 
 }
