@@ -71,8 +71,11 @@ public class MainJFrame extends javax.swing.JFrame {
     private JButton jbtConnect;
     private JButton jbtCheckRF;
     private JButton jbtExecute;
+    private JTextField jTFArea;
     private JTextArea jtaInFo;
+    PaintPanel paintPanel;
 
+    private int iArea;
     private int X_1, X2;
     private int Y_1, Y2;
 
@@ -82,13 +85,11 @@ public class MainJFrame extends javax.swing.JFrame {
     private static SerialPort comPortMain;
     private boolean isOpenPort = false;
 
-    
-        // Configuation Fram
+    // Configuation Fram
     private JLabel jLabelPort;
     private JComboBox<String> jComboBoxPort;
     private int iIndexPort = 0;
-    
-    
+
     void setGuiTemp() {
 
         jLabelTitle = new JLabel("Chương Trình Giám Sát Đuối Nước");
@@ -120,7 +121,7 @@ public class MainJFrame extends javax.swing.JFrame {
         jLabelPort.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabelPort.setHorizontalAlignment(SwingConstants.LEFT);
 
-        jComboBoxPort = new JComboBox<String>();
+        jComboBoxPort = new JComboBox<>();
         jComboBoxPort.setBounds(X_jLabelPort + 120, Y_jLabelPort + 10, 150, 30);;
         jComboBoxPort.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N       
 
@@ -156,13 +157,23 @@ public class MainJFrame extends javax.swing.JFrame {
         jbtExecute.setBounds(X_jLabelPort + 120, Y_jLabelPort + 60 + 50 + 50, 150, 30);
         jbtExecute.setFont(new Font("Times New Roman", Font.BOLD, 18));
 
-        JLabel jLabelPort4 = new JLabel("Information");
-        jLabelPort4.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50, 150, 50);
+        JLabel jLabelPort4 = new JLabel("Area: 20m-50m");
+        jLabelPort4.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50, 170, 50);
         jLabelPort4.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabelPort4.setHorizontalAlignment(SwingConstants.LEFT);
 
-        jtaInFo = new JTextArea("The system have not started !!!");
-        jtaInFo.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 40, width_screen - width_screen_map - 150, 300);
+        jTFArea = new JTextField("20");
+        jTFArea.setBounds(X_jLabelPort + 170, Y_jLabelPort + 50 + 50 + 50 + 55, 50, 33);
+        jTFArea.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jTFArea.setHorizontalAlignment(SwingConstants.LEFT);
+
+        JLabel jLabelPort5 = new JLabel("Information");
+        jLabelPort5.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 50, 120, 30);
+        jLabelPort5.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabelPort5.setHorizontalAlignment(SwingConstants.LEFT);
+
+        jtaInFo = new JTextArea("The system has not started !!!");
+        jtaInFo.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 50 + 40, width_screen - width_screen_map - 150, 300);
         jtaInFo.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
         jtaInFo.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
 
@@ -175,7 +186,9 @@ public class MainJFrame extends javax.swing.JFrame {
         add(jLabelPort2);
         add(jLabelPort3);
         add(jLabelPort4);
+        add(jLabelPort5);
         add(jtaInFo);
+        add(jTFArea);
         add(jbtConnect);
         add(jbtCheckRF);
         add(jbtExecute);
@@ -224,14 +237,30 @@ public class MainJFrame extends javax.swing.JFrame {
     }
 
     private void onClickExecution() {
-        jbtCheckRF.addActionListener(new ActionListener() {
+        jbtExecute.addActionListener(new ActionListener() {
+            private int isConnect = 0;
+
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (isOpenPort) {
-                    SingleThreadReceiveDataExecution();
+                if (isConnect == 0) {
+                    if (isOpenPort) {
+                        isConnect = 1;
+                        iArea = convertStringToInt();
+                        jbtExecute.setText("Running");
+                        SingleThreadReceiveDataExecution();
+                        System.out.println("Is start running ");
+                    } else {
+                        jbtExecute.setText("Run");
+                        isConnect = 0;
+                        JOptionPane.showMessageDialog(MainJFrame.this, "Vui Long Ket Noi Truoc Khi Kiem Tra Module !!!", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 } else {
-                    JOptionPane.showMessageDialog(MainJFrame.this, "Vui Long Ket Noi Truoc Khi Kiem Tra Module !!!", "Error", JOptionPane.ERROR_MESSAGE);
+                    isConnect = 0;
+                    jbtExecute.setText("Run");
+                    executorServiceExecution.shutdown();
+                    System.out.println("Is stop running ");
                 }
+
             }
         });
     }
@@ -242,7 +271,8 @@ public class MainJFrame extends javax.swing.JFrame {
         width_screen = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
         System.out.println("width_screen: " + width_screen);
         System.out.println("heigh_screen: " + heigh_screen);
-        distanceBLE(-24.56);
+        //distanceBLE(-24.56);
+        //calibDistance(-10, -13, -14, -15);
 
         initComponents();
         getContentPane().setBackground(Color.WHITE);
@@ -252,7 +282,7 @@ public class MainJFrame extends javax.swing.JFrame {
 
         System.out.println("width_screen_map: " + width_screen_map);
         System.out.println("heigh_screen_map: " + heigh_screen_map);
-        PaintPanel paintPanel = new PaintPanel(20, 30);
+        paintPanel = new PaintPanel();
         paintPanel.setBounds(50, 40, width_screen_map, heigh_screen_map);
         paintPanel.setBackground(Color.WHITE);
         paintPanel.setBorder(new javax.swing.border.LineBorder(Color.RED, 2, true));
@@ -262,43 +292,9 @@ public class MainJFrame extends javax.swing.JFrame {
         Y_1 = heigh_screen_map;
         System.out.println("X_1: " + X_1);
         System.out.println("Y_1: " + Y_1);
-
-        Random rand = new Random(100);
-        ScheduledExecutorService service__ = Executors.newSingleThreadScheduledExecutor();
-        service__.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                int xx = rand.nextInt(200);
-                int yy = rand.nextInt(200);
-
-                x = xx;
-                y = yy;
-
-                double x1 = 32.5 * 2.0 - 0.5;
-                double y1 = 10 * 2.0 - 0.5;
-
-                double x_10 = X_1 / 100.0;
-                double y_10 = Y_1 / 100.0;
-
-                System.out.println("x_10: " + x_10);
-                System.out.println("y_10: " + y_10);
-
-                double x = x1 > 0 ? (x1 * x_10 - 10.0) : 10; // met
-                double y = y1 > 0 ? (Y_1 - y1 * y_10 - 10.0) : -10; // met
-
-                System.out.println("_______________________x_: " + x1 * x_10 + " --------------- " + x);
-                System.out.println("_______________________y_: " + y1 * y_10 + " --------------- " + y);
-
-                paintPanel.setX_point((int) x);
-                paintPanel.setY_point((int) y);
-                repaint();
-
-            }
-        }, 0, 1000, TimeUnit.MILLISECONDS);
-        // service__.shutdown();
     }
 
-    private double distanceBLE(double RSSI) {
+    private double distanceBLE(int RSSI) {
         double d = 0;
         double A = -12;
         double n = 2.0755;
@@ -375,71 +371,86 @@ public class MainJFrame extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
     public class PaintPanel extends JPanel {
 
-        private int x_point;
-        private int y_point;
+        private int x_point1;
+        private int y_point1;
+        private int x_point2;
+        private int y_point2;
 
-        public int getX_point() {
-            return x_point;
+        public int getX_point(int x1) {
+            return x_point1;
         }
 
-        public void setX_point(int x_point) {
-            this.x_point = x_point;
+        public void setX_point(int x_point1, int x_point2) {
+            this.x_point1 = x_point1;
+            this.x_point2 = x_point2;
         }
 
         public int getY_point() {
-            return y_point;
+            return y_point1;
         }
 
-        public void setY_point(int y_point) {
-            this.y_point = y_point;
+        public void setY_point(int y_point1, int y_point2) {
+            this.y_point1 = y_point1;
+            this.y_point2 = y_point2;
         }
 
-        public PaintPanel(int x, int y) {
+        public PaintPanel() {
             super();
-            x_point = x;
-            y_point = y;
             this.setBackground(Color.LIGHT_GRAY);
-            points[0] = new Point(x_point, y_point);
+            points[0] = new Point(x_point1, y_point1);
             repaint();
         }
 
         public void paint(Graphics g) {
             super.paint(g); // clears drawing area
-            g.fillOval(x_point, y_point, 15, 15);
-//            g.fillOval(x_point + 20, y_point, 10, 10);
-//            g.fillOval(x_point + 40, y_point, 10, 10);
+            iArea = convertStringToInt();
+
+            g.fillOval(x_point1, y_point1, 20, 20);
+            g.fillOval(x_point2, y_point2, 20, 20);
 
             g.setColor(Color.red);
             g.setFont(new Font("Courier", Font.BOLD, 13));
-            int line = 10;
+            int aT = iArea / (int) (iArea / 10 < 1 ? 1 : iArea / 10);
+            int line = aT > 10 ? 10 : aT;
+            System.out.println("line = " + line);
 
             int rowHt = (width_screen_map) / line;
-            //g.drawLine(rowHt - 50, 30, rowHt - 50, heigh_screen_map - 30);
             for (int i = 0; i < line; i++) {
                 g.drawLine(i * rowHt, 0, i * rowHt, heigh_screen_map);
+                double b = (double) (i * iArea / 10.0);
                 if (i == 0) {
-                    g.drawString(String.valueOf(i * 5), i * rowHt + 3, heigh_screen_map - 5);
-                } else if (i < 10) {
-                    g.drawString(String.valueOf(i * 5), i * rowHt - 10, heigh_screen_map - 5);
-                } else if (i >= 10) {
-                    g.drawString(String.valueOf(i * 5), i * rowHt - 20, heigh_screen_map - 5);
+                    g.drawString(String.valueOf((double) (i * iArea / 10.0)), i * rowHt + 3, heigh_screen_map - 5);
+                } else if (i * iArea / 10 < 10) {
+                    g.drawString(String.valueOf((double) (i * iArea / 10.0)), i * rowHt - 10, heigh_screen_map - 5);
+                } else if (i * iArea / 10 >= 10) {
+                    g.drawString(String.valueOf((double) (i * iArea / 10.0)), i * rowHt - 18, heigh_screen_map - 5);
                 }
             }
-            g.drawString(String.valueOf(line * 5), line * rowHt - 20, heigh_screen_map - 5);
-//
+            g.drawString(String.valueOf((double) (line * iArea / 10.0)), line * rowHt - 20, heigh_screen_map - 5);
+
             int rowWid = heigh_screen_map / line;
             for (int i = 0; i < line; i++) {
                 g.drawLine(0, i * rowWid, width_screen_map, i * rowWid);
                 if (i != 0) {
-                    g.drawString(String.valueOf((line - i) * 5), 3, i * rowWid + 12);
+                    g.drawString(String.valueOf((double) ((line - i) * iArea / 10.0)), 3, i * rowWid + 12);
                 }
             }
-            g.drawString(String.valueOf(50), 3, 12);
+            g.drawString(String.valueOf((double) (iArea / 10.0 * line)), 3, 12);
         }
     }
 
+    private int convertStringToInt() {
+        int a = 20;
+        try {
+            a = Integer.parseInt(jTFArea.getText());
+        } catch (Exception e) {
+
+        }
+        return a <= 50 ? (a >= 20 ? a : 20) : 20;
+    }
+
     private void SingleThreadReceiveDataCheckModule() {
-        ReceeiveData();
+        ReceiveData();
         executorServiceCheckModule = Executors.newSingleThreadScheduledExecutor();
         executorServiceCheckModule.scheduleAtFixedRate(new Runnable() {
             private int iCheckModule = 0;
@@ -467,7 +478,7 @@ public class MainJFrame extends javax.swing.JFrame {
     }
 
     private void SingleThreadReceiveDataExecution() {
-        ReceeiveData();
+        ReceiveData();
         executorServiceExecution = Executors.newSingleThreadScheduledExecutor();
         executorServiceExecution.scheduleAtFixedRate(new Runnable() {
             private int sttModule = 1;
@@ -475,18 +486,52 @@ public class MainJFrame extends javax.swing.JFrame {
             int rssi_B = 0;
             int rssi_C = 0;
             int rssi_D = 0;
+            Random rand = new Random(50);
 
             @Override
             public void run() {
                 System.out.println("---------------------------------- " + rxData);
-                if (!rxData.isEmpty() && sttModule == 0) {
+                if (!rxData.isEmpty() && sttModule == 0 || true) {
                     try {
                         rssi_A = Integer.parseInt("01");
                         rssi_B = Integer.parseInt("01");
                         rssi_C = Integer.parseInt("01");
                         rssi_D = Integer.parseInt("01");
-                    }
-                    catch(Exception e){
+
+                        double toado_x = rand.nextInt(iArea);
+                        double toado_y = rand.nextInt(iArea);
+
+                        //toado_x = 10;
+                        //toado_y = 10;
+                        //iArea = convertStringToInt();
+                        int ratio_X = X_1 / iArea;
+                        int ratio_Y = Y_1 / iArea;
+
+                        int x_p1 = ((int) toado_x * ratio_X - 3) > X_1 ? X_1 - 20 : ((int) toado_x * ratio_X - 3);
+                        int y_p1 = (((int) toado_y * ratio_Y - 10) > Y_1 ? 0 : Y_1 - ((int) toado_y * ratio_Y));
+
+                        int x_p2 = (int) toado_x * ratio_X - 3;
+                        int y_p2 = Y_1 - (int) toado_y * ratio_Y - 10;
+
+                        System.out.print("X - Y: " + X_1 + " - " + Y_1);
+                        System.out.print("   Toa do: " + toado_x + "  " + toado_y);
+                        System.out.print("   ____x_: " + x_p1);
+                        System.out.println("   ____y_: " + y_p1);
+
+                        paintPanel.setX_point(x_p1 - 5, x_p1 - 15);
+                        paintPanel.setY_point(y_p1 - 15, y_p1 + 15);
+                        
+
+                        String s = jtaInFo.getText() + "Toa Do: X1= "
+                                + String.valueOf(toado_x)
+                                + " Y1= " + String.valueOf(toado_y)
+                                + ", X1= "
+                                + String.valueOf(toado_x)
+                                + " Y1= " + String.valueOf(toado_y) + "\n";
+                        
+                        jtaInFo.setText(s);
+                        repaint();
+                    } catch (Exception e) {
                         rxData = "";
                     }
                     rxData = "";
@@ -513,10 +558,10 @@ public class MainJFrame extends javax.swing.JFrame {
                     }
                 }
             }
-        }, 0, (long) (1000), TimeUnit.MILLISECONDS);
+        }, 0, (long) (3000), TimeUnit.MILLISECONDS);
     }
 
-    private void ReceeiveData() {
+    private void ReceiveData() {
         comPortMain.addDataListener(new SerialPortDataListener() {
             @Override
             public int getListeningEvents() {
