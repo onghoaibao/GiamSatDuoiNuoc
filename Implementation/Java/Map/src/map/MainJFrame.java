@@ -40,6 +40,8 @@ import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import javax.swing.JTextArea;
 import java.lang.Math;
+import javax.swing.UIManager;
+import javax.swing.plaf.ColorUIResource;
 
 /**
  *
@@ -172,7 +174,7 @@ public class MainJFrame extends javax.swing.JFrame {
         jLabelPort5.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabelPort5.setHorizontalAlignment(SwingConstants.LEFT);
 
-        jtaInFo = new JTextArea("The system has not started !!!");
+        jtaInFo = new JTextArea("The system has not started !!!\n");
         jtaInFo.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 50 + 40, width_screen - width_screen_map - 150, 300);
         jtaInFo.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
         jtaInFo.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
@@ -205,9 +207,12 @@ public class MainJFrame extends javax.swing.JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (isOpenPort == false) {
+                    iIndexPort = jComboBoxPort.getSelectedIndex();
                     comPortMain = SerialPort.getCommPort(jComboBoxPort.getItemAt(iIndexPort));
+                    System.out.println("comPortMain: " + comPortMain.getSystemPortName());
                     isOpenPort = comPortMain.openPort();
-                    //comPortMain.setComPortTimeouts(SerialPort.LISTENING_EVENT_DATA_RECEIVED, 200, 100);
+                    comPortMain.setBaudRate(9600);
+                    comPortMain.setComPortTimeouts(SerialPort.LISTENING_EVENT_DATA_RECEIVED, 1000, 100);
                     if (isOpenPort) {
                         jbtConnect.setText("Disconnect");
                     } else {
@@ -239,13 +244,12 @@ public class MainJFrame extends javax.swing.JFrame {
     private void onClickExecution() {
         jbtExecute.addActionListener(new ActionListener() {
             private int isConnect = 0;
-
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (isConnect == 0) {
-                    if (isOpenPort) {
+                    if (isOpenPort) {                 
                         isConnect = 1;
-                        iArea = convertStringToInt();
+                        iArea = convertStringToInt(jTFArea.getText());
                         jbtExecute.setText("Running");
                         SingleThreadReceiveDataExecution();
                         System.out.println("Is start running ");
@@ -271,11 +275,18 @@ public class MainJFrame extends javax.swing.JFrame {
         width_screen = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
         System.out.println("width_screen: " + width_screen);
         System.out.println("heigh_screen: " + heigh_screen);
-        //distanceBLE(-24.56);
+        int a = Integer.parseInt("-075");
+        int a1 = Integer.parseInt("-072");
+        distanceBLE(a);
+        distanceBLE(a1);
+        distanceBLE((a1+a)/2);
+        
         //calibDistance(-10, -13, -14, -15);
 
         initComponents();
         getContentPane().setBackground(Color.WHITE);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+
         width_screen_map = heigh_screen;
         heigh_screen_map = heigh_screen - 150;
         setGuiTemp();
@@ -296,13 +307,13 @@ public class MainJFrame extends javax.swing.JFrame {
 
     private double distanceBLE(int RSSI) {
         double d = 0;
-        double A = -12;
-        double n = 2.0755;
+        double A = -73;
+        double n = 2;
         double rs_a = RSSI - A;
         double _10n = -10.0 * n;
         double soMu = rs_a / _10n;
         d = Math.round(Math.pow(10, soMu) * 100.0) / 100.0;
-        System.out.println("Distance: " + d);
+        System.out.println("RSSI: " + RSSI+ "  Distance: " + d);
         return d;
     }
 
@@ -376,6 +387,15 @@ public class MainJFrame extends javax.swing.JFrame {
         private int x_point2;
         private int y_point2;
 
+        private int x_point1_old;
+        private int y_point1_old;
+        private int x_point2_old;
+        private int y_point2_old;
+        
+        private int counter_1 = 0;
+        private int counter_2 = 0;
+        
+
         public int getX_point(int x1) {
             return x_point1;
         }
@@ -403,10 +423,25 @@ public class MainJFrame extends javax.swing.JFrame {
 
         public void paint(Graphics g) {
             super.paint(g); // clears drawing area
-            iArea = convertStringToInt();
+            iArea = convertStringToInt(jTFArea.getText());
+            if (x_point1 != 0 || y_point1 != 0) {
+                g.fillOval(x_point1, y_point1, 20, 20);
+                x_point1_old = x_point1;
+                y_point1_old = y_point1;
+            } else {
+                counter_1 += 1;
+                if(counter_1 == 3){
+                    g.fillOval(x_point1_old, y_point1_old, 20, 20);
+                }
+            }
 
-            g.fillOval(x_point1, y_point1, 20, 20);
-            g.fillOval(x_point2, y_point2, 20, 20);
+            if (x_point2 != 0 || y_point2 != 0) {
+                g.fillOval(x_point1, y_point1, 20, 20);
+                x_point2_old = x_point2;
+                y_point2_old = y_point2;
+            } else {
+                g.fillOval(x_point2_old, y_point2_old, 20, 20);
+            }
 
             g.setColor(Color.red);
             g.setFont(new Font("Courier", Font.BOLD, 13));
@@ -421,12 +456,12 @@ public class MainJFrame extends javax.swing.JFrame {
                 if (i == 0) {
                     g.drawString(String.valueOf((double) (i * iArea / 10.0)), i * rowHt + 3, heigh_screen_map - 5);
                 } else if (i * iArea / 10 < 10) {
-                    g.drawString(String.valueOf((double) (i * iArea / 10.0)), i * rowHt - 10, heigh_screen_map - 5);
+                    g.drawString(String.valueOf((double) (i * iArea / 10.0)), i * rowHt - 20, heigh_screen_map - 5);
                 } else if (i * iArea / 10 >= 10) {
-                    g.drawString(String.valueOf((double) (i * iArea / 10.0)), i * rowHt - 18, heigh_screen_map - 5);
+                    g.drawString(String.valueOf((double) (i * iArea / 10.0)), i * rowHt - 25, heigh_screen_map - 5);
                 }
             }
-            g.drawString(String.valueOf((double) (line * iArea / 10.0)), line * rowHt - 20, heigh_screen_map - 5);
+            g.drawString(String.valueOf((double) (line * iArea / 10.0)), line * rowHt - 30, heigh_screen_map - 5);
 
             int rowWid = heigh_screen_map / line;
             for (int i = 0; i < line; i++) {
@@ -439,12 +474,12 @@ public class MainJFrame extends javax.swing.JFrame {
         }
     }
 
-    private int convertStringToInt() {
+    private int convertStringToInt(String s) {
         int a = 20;
         try {
-            a = Integer.parseInt(jTFArea.getText());
+            a = Integer.parseInt(s);
         } catch (Exception e) {
-
+            return 9999;
         }
         return a <= 50 ? (a >= 20 ? a : 20) : 20;
     }
@@ -481,84 +516,90 @@ public class MainJFrame extends javax.swing.JFrame {
         ReceiveData();
         executorServiceExecution = Executors.newSingleThreadScheduledExecutor();
         executorServiceExecution.scheduleAtFixedRate(new Runnable() {
-            private int sttModule = 1;
+            private int sttModule = 0;
             int rssi_A = 0;
             int rssi_B = 0;
             int rssi_C = 0;
             int rssi_D = 0;
             Random rand = new Random(50);
-
+            int c = 0;
             @Override
-            public void run() {
-                System.out.println("---------------------------------- " + rxData);
-                if (!rxData.isEmpty() && sttModule == 0 || true) {
+            public void run() {               
+                if (!rxData.isEmpty() && sttModule == 0) {
+                    System.out.println("---------------------------------- " + rxData);
                     try {
-                        rssi_A = Integer.parseInt("01");
-                        rssi_B = Integer.parseInt("01");
+                        System.out.println("rxData.substring(2, 5) = " + rxData.substring(2, 5));
+                        System.out.println("rxData.substring(2, 5) = " + rxData.substring(6, rxData.length()));
+                        rssi_A = Integer.parseInt(rxData.substring(2, 5));                  
+                        rssi_B = Integer.parseInt(rxData.substring(6, rxData.length()));
                         rssi_C = Integer.parseInt("01");
                         rssi_D = Integer.parseInt("01");
-
-                        double toado_x = rand.nextInt(iArea);
-                        double toado_y = rand.nextInt(iArea);
-
-                        //toado_x = 10;
-                        //toado_y = 10;
-                        //iArea = convertStringToInt();
+                        
+                        double toado_x = rand.nextInt(100)/2.0;
+                        double toado_y = rand.nextInt(100)/2.0;
+                        toado_x = distanceBLE(rssi_A);
+                        toado_y = distanceBLE(rssi_B);
                         int ratio_X = X_1 / iArea;
                         int ratio_Y = Y_1 / iArea;
 
-                        int x_p1 = ((int) toado_x * ratio_X - 3) > X_1 ? X_1 - 20 : ((int) toado_x * ratio_X - 3);
-                        int y_p1 = (((int) toado_y * ratio_Y - 10) > Y_1 ? 0 : Y_1 - ((int) toado_y * ratio_Y));
+                        int x_p1 = ((int) (toado_x * ratio_X - 3.0)) > X_1 ? X_1 - 20 : ((int) (toado_x * ratio_X - 3.0));
+                        int y_p1 = (((int) (toado_y * ratio_Y - 10.0)) > Y_1 ? 0 : Y_1 - ((int) (toado_y * ratio_Y)));
 
-                        int x_p2 = (int) toado_x * ratio_X - 3;
+                        int x_p2 = (int) (toado_x * ratio_X - 3);
                         int y_p2 = Y_1 - (int) toado_y * ratio_Y - 10;
 
                         System.out.print("X - Y: " + X_1 + " - " + Y_1);
+                        System.out.print("   RSSI A1: " + rssi_A + " : " + rssi_B);
                         System.out.print("   Toa do: " + toado_x + "  " + toado_y);
                         System.out.print("   ____x_: " + x_p1);
                         System.out.println("   ____y_: " + y_p1);
-
+                         
                         paintPanel.setX_point(x_p1 - 5, x_p1 - 15);
-                        paintPanel.setY_point(y_p1 - 15, y_p1 + 15);
-                        
-
+                        paintPanel.setY_point(y_p1 - 15, y_p2 - 15);
+                        c += 1;
+                        if(c == 14){
+                            jtaInFo.setText("");
+                            c = 0;
+                        }
                         String s = jtaInFo.getText() + "Toa Do: X1= "
                                 + String.valueOf(toado_x)
                                 + " Y1= " + String.valueOf(toado_y)
-                                + ", X1= "
+                                + ", X2= "
                                 + String.valueOf(toado_x)
-                                + " Y1= " + String.valueOf(toado_y) + "\n";
-                        
+                                + " Y2= " + String.valueOf(toado_y) + "\n";
+
                         jtaInFo.setText(s);
                         repaint();
+                        rxData = "";
                     } catch (Exception e) {
                         rxData = "";
                     }
                     rxData = "";
                 }
 
-                if (isOpenPort) {
+                if (isOpenPort) {                    
                     switch (sttModule) {
                         case 0:
-                            comPortMain.writeBytes("MA".getBytes(), 3);
+                            comPortMain.writeBytes("MA".getBytes(), 2);
                             sttModule = 1;
                             break;
                         case 1:
-                            comPortMain.writeBytes("MB".getBytes(), 3);
+                            comPortMain.writeBytes("MB".getBytes(), 2);
                             sttModule = 2;
                             break;
                         case 2:
-                            comPortMain.writeBytes("MC".getBytes(), 3);
+                            comPortMain.writeBytes("MC".getBytes(), 2);
                             sttModule = 3;
                             break;
                         case 3:
-                            comPortMain.writeBytes("MD".getBytes(), 3);
+                            comPortMain.writeBytes("MD".getBytes(), 2);
                             sttModule = 0;
                             break;
                     }
+                    sttModule = 0; // test and remove this line
                 }
             }
-        }, 0, (long) (3000), TimeUnit.MILLISECONDS);
+        }, 0, (long) (5000), TimeUnit.MILLISECONDS);
     }
 
     private void ReceiveData() {
@@ -567,13 +608,13 @@ public class MainJFrame extends javax.swing.JFrame {
             public int getListeningEvents() {
                 return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
             }
-
             @Override
             public void serialEvent(SerialPortEvent event) {
                 byte[] newData = event.getReceivedData();
                 for (int i = 0; i < newData.length; ++i) {
                     rxData += (char) newData[i];
                 }
+                System.out.println("rxData: " + rxData);
             }
         });
     }
