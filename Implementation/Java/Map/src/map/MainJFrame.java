@@ -38,8 +38,18 @@ import javax.swing.border.Border;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import java.awt.List;
+import java.awt.ScrollPane;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import javax.swing.JTextArea;
 import java.lang.Math;
+import java.util.ArrayList;
+import javax.swing.DefaultListModel;
+import javax.swing.JCheckBox;
+import javax.swing.JList;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 import javax.swing.plaf.ColorUIResource;
 
@@ -75,7 +85,12 @@ public class MainJFrame extends javax.swing.JFrame {
     private JButton jbtExecute;
     private JTextField jTFArea;
     private JTextArea jtaInFo;
+    private JList jlistInFo;
+    private JScrollPane sp;
+    DefaultListModel model = new DefaultListModel();
+    ArrayList<String> lElement = new ArrayList<>();
     PaintPanel paintPanel;
+    private JCheckBox jCheckBox;
 
     private int iArea;
     private int X_1, X2;
@@ -93,13 +108,19 @@ public class MainJFrame extends javax.swing.JFrame {
     private int iIndexPort = 0;
 
     void setGuiTemp() {
-
-        jLabelTitle = new JLabel("Chương Trình Giám Sát Đuối Nước");
-        jLabelTitle.setBounds(heigh_screen_map + 250, 40, 700, 50);
-        //jLabelTitle.setBorder(new javax.swing.border.LineBorder(Color.RED, 1, true));
-        jLabelTitle.setFont(new Font("Times New Roman", Font.BOLD, 34));
+        jLabelTitle = new JLabel("CHƯƠNG TRÌNH");
+        jLabelTitle.setBounds(heigh_screen_map + 250, 40, 550, 50);
+        jLabelTitle.setFont(new Font("Times New Roman", Font.BOLD, 25));
         jLabelTitle.setHorizontalAlignment(SwingConstants.CENTER);
         jLabelTitle.setVerticalAlignment(SwingConstants.CENTER);
+        jLabelTitle.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
+
+        JLabel jLabelTitle1 = new JLabel("CẢNH BÁO SỚM TÌNH TRẠNG ĐUỐI NƯỚC");
+        jLabelTitle1.setBounds(heigh_screen_map + 250, 40 + 50, 550, 50);
+        jLabelTitle1.setFont(new Font("Times New Roman", Font.BOLD, 25));
+        jLabelTitle1.setHorizontalAlignment(SwingConstants.CENTER);
+        jLabelTitle1.setVerticalAlignment(SwingConstants.CENTER);
+        jLabelTitle1.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
 
         jLabel_A = new JLabel("A");
         jLabel_B = new JLabel("B");
@@ -173,11 +194,47 @@ public class MainJFrame extends javax.swing.JFrame {
         jLabelPort5.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 50, 120, 30);
         jLabelPort5.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabelPort5.setHorizontalAlignment(SwingConstants.LEFT);
+        //jLabelPort5.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
+
+        jCheckBox = new JCheckBox();
+        jCheckBox.setBounds(X_jLabelPort + 130, Y_jLabelPort + 50 + 50 + 50 + 50 + 40, 50, 50);
+        jCheckBox.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jCheckBox.setBorderPainted(false);
+        jCheckBox.setOpaque(false);
 
         jtaInFo = new JTextArea("The system has not started !!!\n");
-        jtaInFo.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 50 + 40, width_screen - width_screen_map - 150, 300);
+        jtaInFo.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 50 + 40, width_screen - width_screen_map - 300, 300);
         jtaInFo.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
         jtaInFo.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
+
+        jlistInFo = new JList();
+        jlistInFo.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 50 + 40, width_screen - width_screen_map - 300, 300);
+        jlistInFo.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
+        jlistInFo.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
+        jlistInFo.setLayoutOrientation(JList.VERTICAL);
+        //jlistInFo.setVisibleRowCount(-1);
+        // jScrollPane1 = new ScrollPane(MainJFrame.jlistInFo);
+
+        sp = new JScrollPane(this.jlistInFo);
+        sp.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 50 + 40, width_screen - width_screen_map - 300, 300);
+        sp.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
+        sp.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
+
+        sp.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+            public void adjustmentValueChanged(AdjustmentEvent e) {
+                boolean b = jCheckBox.isSelected();
+                if (b) {
+                    e.getAdjustable().setValue(e.getAdjustable().getMaximum());
+                }
+            }
+        });
+
+        sp.setViewportView(jlistInFo);
+
+        String week[] = {"Monday", "Tuesday", "Wednesday",
+            "Thursday", "Friday", "Saturday", "Sunday"};
+
+        jlistInFo.setModel(model);
 
         add(jLabel_A);
         add(jLabel_B);
@@ -189,17 +246,22 @@ public class MainJFrame extends javax.swing.JFrame {
         add(jLabelPort3);
         add(jLabelPort4);
         add(jLabelPort5);
-        add(jtaInFo);
+        add(sp);
+        //add(jtaInFo);
+        add(jCheckBox);
         add(jTFArea);
         add(jbtConnect);
         add(jbtCheckRF);
         add(jbtExecute);
         add(jComboBoxPort);
         add(jLabelPort);
+        add(jLabelTitle1);
 
         onClickConnect();
         onClickCheck();
         onClickExecution();
+        iArea = convertStringToInt(jTFArea.getText());
+        iArea = 80;
     }
 
     private void onClickConnect() {
@@ -244,10 +306,11 @@ public class MainJFrame extends javax.swing.JFrame {
     private void onClickExecution() {
         jbtExecute.addActionListener(new ActionListener() {
             private int isConnect = 0;
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (isConnect == 0) {
-                    if (isOpenPort) {                 
+                    if (isOpenPort) {
                         isConnect = 1;
                         iArea = convertStringToInt(jTFArea.getText());
                         jbtExecute.setText("Running");
@@ -269,6 +332,7 @@ public class MainJFrame extends javax.swing.JFrame {
         });
     }
 
+
     public MainJFrame() {
 
         heigh_screen = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
@@ -279,10 +343,9 @@ public class MainJFrame extends javax.swing.JFrame {
         int a1 = Integer.parseInt("-072");
         distanceBLE(a);
         distanceBLE(a1);
-        distanceBLE((a1+a)/2);
-        
-        //calibDistance(-10, -13, -14, -15);
+        distanceBLE((a1 + a) / 2);
 
+        //calibDistance(-10, -13, -14, -15);
         initComponents();
         getContentPane().setBackground(Color.WHITE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -291,8 +354,12 @@ public class MainJFrame extends javax.swing.JFrame {
         heigh_screen_map = heigh_screen - 150;
         setGuiTemp();
 
-        System.out.println("width_screen_map: " + width_screen_map);
-        System.out.println("heigh_screen_map: " + heigh_screen_map);
+        System.out.println("iArea:" + iArea);
+        System.out.println("Toa do X: " + calculator_X_AB(56.57, 56.57));
+        System.out.println("Toa do Y: " + calculator_Y_AB(56.57, 56.57));
+
+        //System.out.println("width_screen_map: " + width_screen_map);
+        //System.out.println("heigh_screen_map: " + heigh_screen_map);
         paintPanel = new PaintPanel();
         paintPanel.setBounds(50, 40, width_screen_map, heigh_screen_map);
         paintPanel.setBackground(Color.WHITE);
@@ -301,19 +368,19 @@ public class MainJFrame extends javax.swing.JFrame {
 
         X_1 = width_screen_map;
         Y_1 = heigh_screen_map;
-        System.out.println("X_1: " + X_1);
-        System.out.println("Y_1: " + Y_1);
+        //System.out.println("X_1: " + X_1);
+        //System.out.println("Y_1: " + Y_1);
     }
 
     private double distanceBLE(int RSSI) {
         double d = 0;
-        double A = -73;
+        double A = -80;
         double n = 2;
         double rs_a = RSSI - A;
         double _10n = -10.0 * n;
         double soMu = rs_a / _10n;
         d = Math.round(Math.pow(10, soMu) * 100.0) / 100.0;
-        System.out.println("RSSI: " + RSSI+ "  Distance: " + d);
+        System.out.println("RSSI: " + RSSI + "  Distance: " + d);
         return d;
     }
 
@@ -391,10 +458,9 @@ public class MainJFrame extends javax.swing.JFrame {
         private int y_point1_old;
         private int x_point2_old;
         private int y_point2_old;
-        
+
         private int counter_1 = 0;
         private int counter_2 = 0;
-        
 
         public int getX_point(int x1) {
             return x_point1;
@@ -430,7 +496,7 @@ public class MainJFrame extends javax.swing.JFrame {
                 y_point1_old = y_point1;
             } else {
                 counter_1 += 1;
-                if(counter_1 == 3){
+                if (counter_1 == 3) {
                     g.fillOval(x_point1_old, y_point1_old, 20, 20);
                 }
             }
@@ -523,22 +589,36 @@ public class MainJFrame extends javax.swing.JFrame {
             int rssi_D = 0;
             Random rand = new Random(50);
             int c = 0;
+
             @Override
-            public void run() {               
-                if (!rxData.isEmpty() && sttModule == 0) {
+            public void run() {
+                
+//                if(model.getSize() == 50){
+//                   model.remove(0);
+//                }
+                model.addElement("ABCD: " + jCheckBox.isSelected() + "  " + String.valueOf(c));
+
+                if (!rxData.isEmpty() && sttModule == 0 || true) {
                     System.out.println("---------------------------------- " + rxData);
                     try {
-                        System.out.println("rxData.substring(2, 5) = " + rxData.substring(2, 5));
-                        System.out.println("rxData.substring(2, 5) = " + rxData.substring(6, rxData.length()));
-                        rssi_A = Integer.parseInt(rxData.substring(2, 5));                  
-                        rssi_B = Integer.parseInt(rxData.substring(6, rxData.length()));
-                        rssi_C = Integer.parseInt("01");
-                        rssi_D = Integer.parseInt("01");
-                        
-                        double toado_x = rand.nextInt(100)/2.0;
-                        double toado_y = rand.nextInt(100)/2.0;
-                        toado_x = distanceBLE(rssi_A);
-                        toado_y = distanceBLE(rssi_B);
+//                        System.out.println("rxData.substring(2, 5) = " + rxData.substring(2, 5));
+//                        System.out.println("rxData.substring(2, 5) = " + rxData.substring(6, rxData.length()));
+//                        rssi_A = Integer.parseInt(rxData.substring(2, 5));
+//                        rssi_B = Integer.parseInt(rxData.substring(6, rxData.length()));
+//                        rssi_C = Integer.parseInt("01");
+//                        rssi_D = Integer.parseInt("01");
+
+                        double toado_x = rand.nextInt(100) / 2.0;
+                        double toado_y = rand.nextInt(100) / 2.0;
+
+//                        toado_x = distanceBLE(rssi_A);
+//                        toado_y = distanceBLE(rssi_B);
+                        toado_x = distanceBLE(-80);
+                        toado_y = distanceBLE(-79);
+
+                        toado_x = calculator_X_AB(28.28, 28.28);
+                        toado_y = calculator_Y_AB(28.28, 28.28);
+
                         int ratio_X = X_1 / iArea;
                         int ratio_Y = Y_1 / iArea;
 
@@ -553,22 +633,22 @@ public class MainJFrame extends javax.swing.JFrame {
                         System.out.print("   Toa do: " + toado_x + "  " + toado_y);
                         System.out.print("   ____x_: " + x_p1);
                         System.out.println("   ____y_: " + y_p1);
-                         
+
                         paintPanel.setX_point(x_p1 - 5, x_p1 - 15);
                         paintPanel.setY_point(y_p1 - 15, y_p2 - 15);
                         c += 1;
-                        if(c == 14){
-                            jtaInFo.setText("");
-                            c = 0;
-                        }
-                        String s = jtaInFo.getText() + "Toa Do: X1= "
-                                + String.valueOf(toado_x)
-                                + " Y1= " + String.valueOf(toado_y)
-                                + ", X2= "
-                                + String.valueOf(toado_x)
-                                + " Y2= " + String.valueOf(toado_y) + "\n";
-
-                        jtaInFo.setText(s);
+//                        if (c == 14) {
+//                            jtaInFo.setText("");
+//                            c = 0;
+//                        }
+//                        String s = jtaInFo.getText() + "Toa Do: X1= "
+//                                + String.valueOf(toado_x)
+//                                + " Y1= " + String.valueOf(toado_y)
+//                                + ", X2= "
+//                                + String.valueOf(toado_x)
+//                                + " Y2= " + String.valueOf(toado_y) + "\n";
+//
+//                        jtaInFo.setText(s);
                         repaint();
                         rxData = "";
                     } catch (Exception e) {
@@ -577,7 +657,7 @@ public class MainJFrame extends javax.swing.JFrame {
                     rxData = "";
                 }
 
-                if (isOpenPort) {                    
+                if (isOpenPort) {
                     switch (sttModule) {
                         case 0:
                             comPortMain.writeBytes("MA".getBytes(), 2);
@@ -599,7 +679,39 @@ public class MainJFrame extends javax.swing.JFrame {
                     sttModule = 0; // test and remove this line
                 }
             }
-        }, 0, (long) (5000), TimeUnit.MILLISECONDS);
+        }, 0, (long) (300), TimeUnit.MILLISECONDS);
+    }
+
+    private double calculator_X_AB(double da, double db) {
+        double x___ = 0.0;
+        double AB = iArea;
+        x___ = ((da * da) - (db * db) + (AB * AB)) / (2.0 * AB);
+        x___ = Math.round(x___ * 100) / 100;
+        return x___;
+    }
+
+    private double calculator_Y_AB(double da, double db) {
+        double AB = iArea;
+        double x1 = calculator_X_AB(da, db);
+        double yy = (da * da) - (x1 * x1);
+        yy = (db * db) - Math.pow(AB - x1, 2);
+        System.out.println("yy: " + yy);
+        return yy <= 0 ? 0 : Math.round(Math.sqrt(yy) * 100) / 100.0;
+    }
+
+    private double calculator_X_CD(double dc, double dd) {
+        double x___ = 0.0;
+        double AB = iArea * 2;
+        x___ = ((dc * dc) - (dd * dd) - (AB * AB)) / (-AB);
+        x___ = Math.round(x___ * 100) / 100;
+        return x___;
+    }
+
+    private double calculator_Y_CD(double dc, double dd) {
+        double x1 = calculator_X_CD(dc, dd);
+        double yy = (dc * dc) - (x1 * x1);
+        //System.out.println("yy: " + yy);
+        return yy <= 0 ? 0 : Math.round(Math.sqrt(yy) * 100) / 100.0;
     }
 
     private void ReceiveData() {
@@ -608,6 +720,7 @@ public class MainJFrame extends javax.swing.JFrame {
             public int getListeningEvents() {
                 return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
             }
+
             @Override
             public void serialEvent(SerialPortEvent event) {
                 byte[] newData = event.getReceivedData();
