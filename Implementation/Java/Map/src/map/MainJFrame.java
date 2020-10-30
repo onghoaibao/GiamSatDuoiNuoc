@@ -109,15 +109,15 @@ public class MainJFrame extends javax.swing.JFrame {
 
     void setGuiTemp() {
         jLabelTitle = new JLabel("CHƯƠNG TRÌNH");
-        jLabelTitle.setBounds(heigh_screen_map + 250, 40, 550, 50);
-        jLabelTitle.setFont(new Font("Times New Roman", Font.BOLD, 25));
+        jLabelTitle.setBounds(heigh_screen_map + 250, 40, 400, 50);
+        jLabelTitle.setFont(new Font("Times New Roman", Font.BOLD, 22));
         jLabelTitle.setHorizontalAlignment(SwingConstants.CENTER);
         jLabelTitle.setVerticalAlignment(SwingConstants.CENTER);
         jLabelTitle.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
 
         JLabel jLabelTitle1 = new JLabel("CẢNH BÁO SỚM TÌNH TRẠNG ĐUỐI NƯỚC");
-        jLabelTitle1.setBounds(heigh_screen_map + 250, 40 + 50, 550, 50);
-        jLabelTitle1.setFont(new Font("Times New Roman", Font.BOLD, 25));
+        jLabelTitle1.setBounds(heigh_screen_map + 250, 40 + 50, 450, 50);
+        jLabelTitle1.setFont(new Font("Times New Roman", Font.BOLD, 20));
         jLabelTitle1.setHorizontalAlignment(SwingConstants.CENTER);
         jLabelTitle1.setVerticalAlignment(SwingConstants.CENTER);
         jLabelTitle1.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
@@ -208,7 +208,7 @@ public class MainJFrame extends javax.swing.JFrame {
         jtaInFo.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
 
         jlistInFo = new JList();
-        jlistInFo.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 50 + 40, width_screen - width_screen_map - 300, 300);
+        jlistInFo.setBounds(X_jLabelPort, Y_jLabelPort + 50 + 50 + 50 + 50 + 50 + 40, width_screen - width_screen_map - 300, 200);
         jlistInFo.setFont(new java.awt.Font("Tahoma", 1, 16)); // NOI18N
         jlistInFo.setBorder(new javax.swing.border.LineBorder(Color.BLACK, 1, true));
         jlistInFo.setLayoutOrientation(JList.VERTICAL);
