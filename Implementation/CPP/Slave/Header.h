@@ -1,5 +1,5 @@
 #include "Arduino.h"
-#include "SoftwareSerial.h"
+#include <SoftwareSerial.h>
 
 #ifndef __INIT__MODULE
 #define __INIT__MODULE
@@ -18,11 +18,13 @@ SoftwareSerial HC12(RX_HC12, TX_HC12);
 void sendCommandHM10(String cmd);
 void readDataHM10();
 String getDataIBeaconHM10(int t);
-void initHM10();
+void initHM10(bool a);
+String getRSSIiBeacon(String mac);
 
 // Init HC12 function
 void sendCommandHC12(String cmd);
-void readDataHC12(int t);
-void initHC12();
+String readDataHC12(int t);
+void initHC12(bool a);
+String readAddressHC12();
 
 #endif
