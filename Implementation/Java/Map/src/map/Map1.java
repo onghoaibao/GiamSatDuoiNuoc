@@ -22,19 +22,19 @@ class GridsCanvas {
     private static int sttModule = 0;
     private static int X_1 = 1000;
     private static int Y_1 = 1000;
-
-    public static void main(String[] a) throws InterruptedException {
-//        distanceBLE1(-41.16 );
-//        distanceBLE1(-41.16 );
-//        distanceBLE1(-41.16 );
-//        distanceBLE1(-41.16 );
-//        getRSSIByAdd("A");
-//        getRSSIByAdd("B");
-//        getRSSIByAdd("C");
-//        getRSSIByAdd("D");
-        test1();
-
-    }
+//
+//    public static void main(String[] a) throws InterruptedException {
+////        distanceBLE1(-41.16 );
+////        distanceBLE1(-41.16 );
+////        distanceBLE1(-41.16 );
+////        distanceBLE1(-41.16 );
+////        getRSSIByAdd("A");
+////        getRSSIByAdd("B");
+////        getRSSIByAdd("C");
+////        getRSSIByAdd("D");
+//        test1();
+//
+//    }
 
     private static String[] getRSSIByAdd(String add, String sData) {
         String key = add + "1";
