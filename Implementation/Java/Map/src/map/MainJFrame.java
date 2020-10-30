@@ -332,9 +332,8 @@ public class MainJFrame extends javax.swing.JFrame {
         });
     }
 
-
     public MainJFrame() {
-
+        System.out.println("----------------------------------------------------");
         heigh_screen = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
         width_screen = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
         System.out.println("width_screen: " + width_screen);
@@ -589,33 +588,23 @@ public class MainJFrame extends javax.swing.JFrame {
             int rssi_D = 0;
             Random rand = new Random(50);
             int c = 0;
+            int timeOut = 0;
 
             @Override
             public void run() {
-                
-//                if(model.getSize() == 50){
-//                   model.remove(0);
-//                }
                 model.addElement("ABCD: " + jCheckBox.isSelected() + "  " + String.valueOf(c));
-
                 if (!rxData.isEmpty() && sttModule == 0 || true) {
                     System.out.println("---------------------------------- " + rxData);
                     try {
-//                        System.out.println("rxData.substring(2, 5) = " + rxData.substring(2, 5));
-//                        System.out.println("rxData.substring(2, 5) = " + rxData.substring(6, rxData.length()));
-//                        rssi_A = Integer.parseInt(rxData.substring(2, 5));
-//                        rssi_B = Integer.parseInt(rxData.substring(6, rxData.length()));
-//                        rssi_C = Integer.parseInt("01");
-//                        rssi_D = Integer.parseInt("01");
-
                         double toado_x = rand.nextInt(100) / 2.0;
                         double toado_y = rand.nextInt(100) / 2.0;
-
 //                        toado_x = distanceBLE(rssi_A);
 //                        toado_y = distanceBLE(rssi_B);
-                        toado_x = distanceBLE(-80);
-                        toado_y = distanceBLE(-79);
 
+//                        toado_x_BC_1 = distanceBLE(-80);
+//                        toado_y_BC_1 = distanceBLE(-79);
+//                        toado_x_BC_1 = distanceBLE(-80);
+//                        toado_y_BC_1 = distanceBLE(-79);
                         toado_x = calculator_X_AB(28.28, 28.28);
                         toado_y = calculator_Y_AB(28.28, 28.28);
 
@@ -628,27 +617,10 @@ public class MainJFrame extends javax.swing.JFrame {
                         int x_p2 = (int) (toado_x * ratio_X - 3);
                         int y_p2 = Y_1 - (int) toado_y * ratio_Y - 10;
 
-                        System.out.print("X - Y: " + X_1 + " - " + Y_1);
-                        System.out.print("   RSSI A1: " + rssi_A + " : " + rssi_B);
-                        System.out.print("   Toa do: " + toado_x + "  " + toado_y);
-                        System.out.print("   ____x_: " + x_p1);
-                        System.out.println("   ____y_: " + y_p1);
-
                         paintPanel.setX_point(x_p1 - 5, x_p1 - 15);
                         paintPanel.setY_point(y_p1 - 15, y_p2 - 15);
+
                         c += 1;
-//                        if (c == 14) {
-//                            jtaInFo.setText("");
-//                            c = 0;
-//                        }
-//                        String s = jtaInFo.getText() + "Toa Do: X1= "
-//                                + String.valueOf(toado_x)
-//                                + " Y1= " + String.valueOf(toado_y)
-//                                + ", X2= "
-//                                + String.valueOf(toado_x)
-//                                + " Y2= " + String.valueOf(toado_y) + "\n";
-//
-//                        jtaInFo.setText(s);
                         repaint();
                         rxData = "";
                     } catch (Exception e) {
@@ -657,29 +629,53 @@ public class MainJFrame extends javax.swing.JFrame {
                     rxData = "";
                 }
 
+                int iA = rxData.indexOf("A1") + rxData.indexOf("A1", rxData.indexOf("A1") + 3);
+                int iB = rxData.indexOf("B1") + rxData.indexOf("B1", rxData.indexOf("B1") + 3);
+                int iC = rxData.indexOf("C1") + rxData.indexOf("C1", rxData.indexOf("C1") + 3);
+                int iD = rxData.indexOf("D1") + rxData.indexOf("D1", rxData.indexOf("D1") + 3);
+
                 if (isOpenPort) {
-                    switch (sttModule) {
-                        case 0:
-                            comPortMain.writeBytes("MA".getBytes(), 2);
-                            sttModule = 1;
-                            break;
-                        case 1:
-                            comPortMain.writeBytes("MB".getBytes(), 2);
-                            sttModule = 2;
-                            break;
-                        case 2:
-                            comPortMain.writeBytes("MC".getBytes(), 2);
-                            sttModule = 3;
-                            break;
-                        case 3:
-                            comPortMain.writeBytes("MD".getBytes(), 2);
-                            sttModule = 0;
-                            break;
+                    if (sttModule == 0 && iA > rxData.indexOf("A1")) {
+                        System.out.println("Exe 1");
+                        comPortMain.writeBytes("MA".getBytes(), 2);
+                        sttModule = 1;
+                    } else if (sttModule == 1 && iB > rxData.indexOf("B1")) {
+                        System.out.println("Exe 2");
+                        comPortMain.writeBytes("MA".getBytes(), 2);
+                        sttModule = 2;
+                    } else if (sttModule == 2 && iC > rxData.indexOf("C1")) {
+                        System.out.println("Exe 3");
+                        comPortMain.writeBytes("MA".getBytes(), 2);
+                        sttModule = 3;
+                    } else if (sttModule == 3 && iD > rxData.indexOf("D")) {
+                        System.out.println("Exe 4");
+                        comPortMain.writeBytes("MA".getBytes(), 2);
+                        sttModule = 0;
                     }
-                    sttModule = 0; // test and remove this line
                 }
+
+                if (iD > rxData.indexOf("D1")) {
+                    String lA[] = getRSSIByAdd("A", rxData);
+                    String lB[] = getRSSIByAdd("B", rxData);
+                    String lC[] = getRSSIByAdd("C", rxData);
+                    String lD[] = getRSSIByAdd("D", rxData);
+
+                    double X_BC_AB_1 = distanceBLE(Integer.parseInt(lA[1]));
+                    double Y_BC_AB_1 = distanceBLE(Integer.parseInt(lB[1]));
+                    double X_BC_CD_1 = distanceBLE(Integer.parseInt(lC[1]));
+                    double Y_BC_CD_1 = distanceBLE(Integer.parseInt(lD[1]));
+
+                    double X_BC_AB_2 = distanceBLE(Integer.parseInt(lA[1]));
+                    double Y_BC_AB_2 = distanceBLE(Integer.parseInt(lB[1]));
+                    double X_BC_CD_2 = distanceBLE(Integer.parseInt(lC[1]));
+                    double Y_BC_CD_2 = distanceBLE(Integer.parseInt(lD[1]));
+
+                    double toado_XY_AB_1[] = TinhToaDoXY_AB(X_BC_AB_1, Y_BC_AB_1);
+                    double toado_XY_AB_2[] = TinhToaDoXY_AB(X_BC_AB_2, Y_BC_AB_2);
+                }
+                timeOut++;
             }
-        }, 0, (long) (300), TimeUnit.MILLISECONDS);
+        }, 0, (long) (100), TimeUnit.MILLISECONDS);
     }
 
     private double calculator_X_AB(double da, double db) {
@@ -731,4 +727,36 @@ public class MainJFrame extends javax.swing.JFrame {
             }
         });
     }
+
+    private String[] getRSSIByAdd(String add, String sData) {
+        String key = add + "1";
+        String sTemp = sData.substring(sData.indexOf(key), sData.indexOf(key, sData.indexOf(key) + 3) + 2);
+        System.out.println("sTemp: " + sTemp + "   sKey: " + key);
+        String[] d = sTemp.split(":");
+        System.out.println("\n----------");
+        return d;
+    }
+
+    private double[] TinhToaDoXY_AB(double dA, double dB) {
+        double[] td = {0.0, 0.0};
+        double toado_x = calculator_X_AB(dA, dB);
+        double toado_y = calculator_Y_AB(dA, dB);
+
+        int ratio_X = X_1 / iArea;
+        int ratio_Y = Y_1 / iArea;
+
+        int x_p1 = ((int) (toado_x * ratio_X - 3.0)) > X_1 ? X_1 - 20 : ((int) (toado_x * ratio_X - 3.0));
+        int y_p1 = (((int) (toado_y * ratio_Y - 10.0)) > Y_1 ? 0 : Y_1 - ((int) (toado_y * ratio_Y)));
+
+        int x_p2 = (int) (toado_x * ratio_X - 3);
+        int y_p2 = Y_1 - (int) toado_y * ratio_Y - 10;
+
+        td[0] = (x_p1 - 5.0);
+        td[1] = (x_p1 - 5.0);
+        System.out.println("X: " + td[0] + "  Y: " + td[1]);
+//        paintPanel.setX_point(x_p1 - 5, x_p1 - 15);
+//        paintPanel.setY_point(y_p1 - 15, y_p2 - 15);
+        return td;
+    }
+
 }
